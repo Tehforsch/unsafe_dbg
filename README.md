@@ -25,12 +25,24 @@ deeply_nested_generic_function(a)
 ```
 
 ## Safety
-This macro is horribly unsafe and should only ever be used to briefly debug something. It simply reinterprets some object in whatever you type you give it and debug prints it. There are absolutely no safety handles here. During the ~20 times I tested this macro while writing it, I got complete gibberish about 10 times because I accidentally interpreted some `&T` as `T`, some `T` as `&T` or something else. If you're lucky, the gibberish will be obvious and you can give the macro the correct type. If you're not you might be horribly mislead.
+This macro is horribly unsafe and should only ever be used to briefly debug something. It simply reinterprets some object in whatever you type you give it and debug prints it. There are absolutely no safety handles here. During the ~20 times I tested this macro while writing it, I got complete gibberish about 10 times because I accidentally interpreted some `&T` as `T`, some `T` as `&T` or something else. If you're very lucky, you will get a segfault. If you're decently lucky, the gibberish will be obvious and you can give the macro the correct type or do something better with your life. If you're slightly less lucky you might be horribly mislead about the actual value of your `T`. You will get undefined behavior. Your PC might be set on fire. Do not go to sleep with a line containing `unsafe_dbg` in your code.
 
-Here is another thing that wont't work (a `dyn T` is nothing like a `T` after all):
+Here is one thing that absolutely does not work:
+```rust should_panic
+use unsafe_dbg::unsafe_dbg;
+
+fn deeply_nested_generic_function<T>(t: T) {
+    // Note the additional reference, messing everything up horribly:
+    unsafe_dbg!((&t, String));
+    panic!("This absolutely doesn't work!");
+}
+
+deeply_nested_generic_function(&"hi".to_owned());
+```
+
+Here is another thing that wont't work (a `dyn T` is nothing like a `T`, so there is no reason to expect this to work):
 
 ```rust should_panic
-
 use unsafe_dbg::unsafe_dbg;
 
 trait MyTrait {}
@@ -38,8 +50,8 @@ trait MyTrait {}
 impl MyTrait for String {}
 
 fn deeply_nested_dynamic_dispatch_function(t: &dyn MyTrait) {
-    unsafe_dbg!((t, String));
-    panic!("This absolutely doesn't work!");
+    unsafe_dbg!((t, &String));
+    panic!("This absolutely doesn't work either!");
 }
 
 deeply_nested_dynamic_dispatch_function(&"hi".to_owned());
@@ -54,7 +66,7 @@ casted result for something further down the line, which is a lot
 worse than just having unsafe debug prints.
 
 ```rust
-# use unsafe_dbg::unsafe_dbg;
+use unsafe_dbg::unsafe_dbg;
 
 fn deeply_nested_generic_function<T: Clone + PartialEq + Eq>(t: T) {
     let my_t = unsafe_dbg!((t.clone(), String));
