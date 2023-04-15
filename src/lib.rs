@@ -1,3 +1,5 @@
+#![doc = include_str!("../README.md")]
+
 use core::fmt::Debug;
 
 pub fn unsafe_dbg_fmt<T, O: Debug>(t: T) -> String {
