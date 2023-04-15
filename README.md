@@ -1,7 +1,7 @@
 # unsafe_dbg
 
 ## Motivation
-Sometimes, when you're debugging or testing generic rust functions, you end up wanting to know the value of one of your variables `t` which is of some generic type `T`. You want to just write `dbg!(t)`, check the output and get on with your life. However, `T` doesn't implement `Debug`. Of course, you could just add a `T: Debug` constraint on your function, which can be a decent solution sometimes. However, if your function is really deep in the callchain of your code, you end up having to add `T: Debug` constraints everywhere, while also having to `#[derive(Debug)]` for all types that you enter the callchain with. Even after having printed the value, the ordeal is not over. If you decide to leave the constraints around, this means that there are now `T: Debug` constraints remaining everywhere in the code, that really don't need to be there. However, if you remove them, you already know that you will have to debug print another `T` not too far in the future.
+Sometimes, when you're debugging or testing generic rust functions, you end up wanting to know the value of one of your variables `t` which is of some generic type `T`. You want to just write `dbg!(t)`, check the output and get on with your life. However, `T` doesn't implement `Debug`. Of course, you could just add a `T: Debug` constraint on your function, which can be a decent solution sometimes. However, if your function is really deep in the callchain of your code, you end up having to add `T: Debug` constraints everywhere, while also having to `#[derive(Debug)]` for all types that you enter the callchain with. Even after having printed the value, the ordeal is not over, because now you have to make a choice. Your first choice is to leave `T: Debug` constraints just hanging around everywhere in the code, adding unnecessary boilerplate and ugliness while also being overly restrictive about the types your code accepts. The other choice is to remove the constraints, but you already know that if you do, you will have to debug print another `T` not too far in the future.
 
 This macro is for those scenarios where you know that currently, when you're running your code, `T` is really just your favorite struct `A`. `A` implements `Debug` and is just generally really friendly and nice to be around and you really just want to see what it has to say.
 
@@ -16,6 +16,7 @@ struct A {
 }
 
 fn deeply_nested_generic_function<T>(t: T) {
+    // Blindly reinterpret t as an A. It's going to be fine, trust me, rustc.
     unsafe_dbg!((t, A));
 }
 
