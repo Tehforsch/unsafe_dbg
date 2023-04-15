@@ -71,14 +71,36 @@ The macro supports multiple arguments, each of which can be casted horribly unsa
 ```rust
 use unsafe_dbg::unsafe_dbg;
 
-fn deeply_nested_generic_function<T: Clone + PartialEq + Eq>(t: T) {
-    let (my_t, my_string, my_bool) = unsafe_dbg!((t.clone(), String), "hello world", true);
-    // Intentionally not using assert_eq here, because that
-    // requires T to implement Debug, which defeats the whole purpose.
-    assert!(t == my_t);
-    assert_eq!(my_string, "hello world");
-    assert_eq!(my_bool, true);
+fn deeply_nested_generic_function<T>(t: T) {
+    let (my_t, my_string, my_bool) = unsafe_dbg!((t, usize), "hello world", true);
 }
 
 deeply_nested_generic_function::<usize>(1000);
+```
+
+## A safe variant
+If your type `T` happens to be `'static`, you can also call
+```rust
+use unsafe_dbg::safe_dbg;
+
+fn deeply_nested_generic_function<T: 'static>(t: T) {
+    safe_dbg!((t, String));
+}
+
+deeply_nested_generic_function::<String>("hi".into());
+```
+
+This fails safely if you pass in the wrong type because it uses the `Any / downcast_ref` mechanism:
+```rust should_panic
+use unsafe_dbg::safe_dbg;
+
+fn deeply_nested_generic_function<T: 'static>(t: T) {
+    safe_dbg!((t, String));
+}
+
+deeply_nested_generic_function::<usize>(5);
+```
+
+```text
+thread 'main' panicked at 'Wrong type passed to safe_dbg!'
 ```
