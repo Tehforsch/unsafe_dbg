@@ -40,7 +40,7 @@ fn deeply_nested_generic_function<T>(t: T) {
 deeply_nested_generic_function(&"hi".to_owned());
 ```
 
-Here is another thing that wont't work (a `dyn T` is nothing like a `T`, so there is no reason to expect this to work):
+Here is another thing that won't work (a `dyn T` is nothing like a `T`, so there is no reason to expect this to work):
 
 ```rust should_panic
 use unsafe_dbg::unsafe_dbg;
